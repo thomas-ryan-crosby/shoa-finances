@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Data exploration scripts (temporary)
+explore_data.py
+inspect_pnl.py
+debug_pnl.py
+debug_pnl2.py
+check_row0.py
+test_year_col.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
