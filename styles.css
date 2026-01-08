@@ -284,3 +284,31 @@ tr:hover {
     background: #5568d3;
 }
 
+.summary-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin: 10px 0;
+}
+
+.summary-card h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-top: 10px;
+    padding-top: 15px;
+}
+
