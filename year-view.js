@@ -21,10 +21,34 @@ function loadYearData(year) {
     createExpensesChart(year);
     createVendorsChart(year);
     createExpensesTable(year);
+    updateOperatingMargin(year);
     
     // Update reserve fund for 2025
     if (year === 2025) {
         update2025Reserves();
+    }
+}
+
+function updateOperatingMargin(year) {
+    const yearData = financialData.pnl_data[year.toString()];
+    if (!yearData) return;
+    
+    const totalIncome = Object.values(yearData.income || {}).reduce((a, b) => a + b, 0);
+    const totalExpenses = Object.values(yearData.expenses || {}).reduce((a, b) => a + b, 0);
+    const netIncome = totalIncome - totalExpenses;
+    const operatingMargin = totalIncome > 0 ? (netIncome / totalIncome * 100) : 0;
+    
+    const marginValueEl = document.getElementById('operatingMarginValue');
+    const marginCardEl = document.getElementById('operatingMarginCard');
+    
+    if (marginValueEl) {
+        marginValueEl.textContent = operatingMargin.toFixed(2) + '%';
+        marginValueEl.style.color = operatingMargin >= 0 ? '#28a745' : '#dc3545';
+        marginValueEl.style.fontSize = '2.5em';
+    }
+    
+    if (marginCardEl) {
+        marginCardEl.style.borderLeft = `5px solid ${operatingMargin >= 0 ? '#28a745' : '#dc3545'}`;
     }
 }
 

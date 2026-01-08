@@ -236,6 +236,65 @@ function updateBudgetSummary() {
             <span style="color: ${margin >= 0 ? '#28a745' : '#dc3545'}">${margin.toFixed(2)}%</span>
         </div>
     `;
+    
+    // Update operating margin display
+    const marginValueEl = document.getElementById('operatingMarginValue');
+    const marginCardEl = document.getElementById('operatingMarginCard');
+    if (marginValueEl) {
+        marginValueEl.textContent = margin.toFixed(2) + '%';
+        marginValueEl.style.color = margin >= 0 ? '#28a745' : '#dc3545';
+        marginValueEl.style.fontSize = '2.5em';
+    }
+    if (marginCardEl) {
+        marginCardEl.style.borderLeft = `5px solid ${margin >= 0 ? '#28a745' : '#dc3545'}`;
+    }
+    
+    // Update reserve fund projection
+    updateReserveProjection(totalIncome, totalExpenses);
+}
+
+function updateReserveProjection(totalIncome, totalExpenses) {
+    const end2024Reserve = 326672.14;
+    const y2025Data = financialData.pnl_data['2025'];
+    const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
+    const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
+    const y2025Net = y2025Income - y2025Expenses;
+    const end2025Reserve = end2024Reserve + y2025Net;
+    
+    // Try to get 2026 projection from localStorage
+    let end2026Reserve = null;
+    try {
+        const saved2026Reserve = localStorage.getItem('end2026ReserveFund');
+        if (saved2026Reserve) {
+            end2026Reserve = parseFloat(saved2026Reserve);
+        }
+    } catch (e) {
+        // localStorage not available
+    }
+    
+    if (!end2026Reserve) {
+        // Estimate from 2026 budget data
+        const y2026Income = Object.values(budget2026Data.income || {}).reduce((a, b) => a + b, 0);
+        let y2026Expenses = 0;
+        Object.values(budget2026Data.expenses || {}).forEach(category => {
+            Object.values(category || {}).forEach(amount => {
+                y2026Expenses += amount;
+            });
+        });
+        const y2026Net = y2026Income - y2026Expenses;
+        end2026Reserve = end2025Reserve + y2026Net;
+    }
+    
+    const projectedNet2027 = totalIncome - totalExpenses;
+    const end2027Reserve = end2026Reserve + projectedNet2027;
+    
+    const startingReserveEl = document.getElementById('startingReserve2027');
+    const projectedNetEl = document.getElementById('projectedNet2027');
+    const end2027ReserveEl = document.getElementById('end2027ReserveFund');
+    
+    if (startingReserveEl) startingReserveEl.textContent = '$' + formatCurrency(end2026Reserve);
+    if (projectedNetEl) projectedNetEl.textContent = '$' + formatCurrency(projectedNet2027);
+    if (end2027ReserveEl) end2027ReserveEl.textContent = '$' + formatCurrency(end2027Reserve);
 }
 
 function formatCurrency(value) {
