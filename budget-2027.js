@@ -106,6 +106,9 @@ function initialize2027Budget() {
     // Load income items
     loadIncomeItems(budget2027.income);
     
+    // Create revenue overview
+    createRevenueOverview(budget2027.income);
+    
     // Load expense items by category
     loadExpenseItems('Operating Expenses', 'operatingExpenses', budget2027.expenses);
     loadExpenseItems('Amenities Maintenance', 'amenitiesMaintenance', budget2027.expenses);
@@ -306,6 +309,43 @@ function updateReserveProjection(totalIncome, totalExpenses) {
     if (startingReserveEl) startingReserveEl.textContent = '$' + formatCurrency(end2026Reserve);
     if (projectedNetEl) projectedNetEl.textContent = '$' + formatCurrency(projectedNet2027);
     if (end2027ReserveEl) end2027ReserveEl.textContent = '$' + formatCurrency(end2027Reserve);
+}
+
+function createRevenueOverview(incomeData) {
+    const container = document.getElementById('revenueOverview');
+    if (!container || !incomeData) return;
+    
+    const incomeItems = Object.entries(incomeData || {})
+        .filter(([name, amount]) => amount > 0)
+        .sort((a, b) => b[1] - a[1]);
+    
+    const totalIncome = Object.values(incomeData || {}).reduce((a, b) => a + b, 0);
+    
+    if (incomeItems.length === 0) {
+        container.innerHTML = '<p>No revenue items in budget.</p>';
+        return;
+    }
+    
+    container.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+            ${incomeItems.map(([name, amount]) => {
+                const percentage = totalIncome > 0 ? ((amount / totalIncome) * 100).toFixed(1) : 0;
+                return `
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 8px;">${name}</div>
+                        <div style="font-size: 1.8em; font-weight: bold; margin-bottom: 5px;">$${formatCurrency(amount)}</div>
+                        <div style="font-size: 0.85em; opacity: 0.8;">${percentage}% of total</div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #28a745;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: bold; font-size: 1.1em;">Total Projected Revenue</span>
+                <span style="font-weight: bold; font-size: 1.3em; color: #28a745;">$${formatCurrency(totalIncome)}</span>
+            </div>
+        </div>
+    `;
 }
 
 function formatCurrency(value) {
