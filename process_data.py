@@ -4,28 +4,36 @@ from datetime import datetime
 import os
 
 def parse_detailed_file(filepath, year):
-    """Parse detailed expense report Excel file"""
+    """Parse detailed expense report Excel file
+    
+    Structure:
+    - Column A (Unnamed: 0): Top level category (e.g., "Generator", "Operating Expenses")
+    - Column B (Unnamed: 1): Second level category
+    - Column C (Unnamed: 2): P&L line item category (e.g., "Legal Fees", "Guard Service")
+    - Column D (Unnamed: 3): Further subcategory (if any)
+    
+    Transactions follow the category header until a "Total" row is encountered.
+    """
     df = pd.read_excel(filepath, sheet_name='Sheet1')
     
     transactions = []
-    current_category = None
-    current_subcategory = None
+    current_pnl_category = None  # This is the P&L line item from Column C
     
     for idx, row in df.iterrows():
-        # Check for category headers
-        if pd.notna(row['Unnamed: 1']) and 'Operating Expenses' in str(row['Unnamed: 1']):
-            current_category = 'Operating Expenses'
-            continue
-        elif pd.notna(row['Unnamed: 1']) and 'Total' not in str(row['Unnamed: 1']):
-            current_category = str(row['Unnamed: 1']).strip()
-            continue
-        
-        # Check for subcategory
-        if pd.notna(row['Unnamed: 2']) and 'Total' not in str(row['Unnamed: 2']):
-            subcat = str(row['Unnamed: 2']).strip()
-            if subcat and subcat != 'nan':
-                current_subcategory = subcat
-            continue
+        # Check Column C (Unnamed: 2) for P&L category headers
+        col_c = row.get('Unnamed: 2')
+        if pd.notna(col_c):
+            col_c_str = str(col_c).strip()
+            # If it's a "Total" row, stop using this category
+            if 'Total' in col_c_str:
+                # Check if this is the end of the current category
+                if current_pnl_category and col_c_str.lower().replace('total', '').strip() == current_pnl_category.lower():
+                    current_pnl_category = None
+                continue
+            # Otherwise, set it as the current category
+            elif col_c_str and col_c_str != 'nan':
+                current_pnl_category = col_c_str
+                continue
         
         # Extract transaction data
         if pd.notna(row.get('Date')) and pd.notna(row.get('Paid Amount')):
@@ -41,12 +49,9 @@ def parse_detailed_file(filepath, year):
                 vendor = str(row.get('Name', '')).strip() if pd.notna(row.get('Name')) else 'Unknown'
                 memo = str(row.get('Memo', '')).strip() if pd.notna(row.get('Memo')) else ''
                 trans_type = str(row.get('Type', '')).strip() if pd.notna(row.get('Type')) else ''
-                split = str(row.get('Split', '')).strip() if pd.notna(row.get('Split')) else ''
                 
-                # Use split as category if available, otherwise use subcategory
-                category = split if split and split != 'nan' else current_subcategory
-                if not category or category == 'nan':
-                    category = current_category or 'Uncategorized'
+                # Use the current P&L category from Column C
+                category = current_pnl_category if current_pnl_category else 'Uncategorized'
                 
                 transactions.append({
                     'date': date.strftime('%Y-%m-%d'),
@@ -56,7 +61,7 @@ def parse_detailed_file(filepath, year):
                     'vendor': vendor if vendor and vendor != 'nan' else 'Unknown',
                     'memo': memo if memo and memo != 'nan' else '',
                     'type': trans_type if trans_type and trans_type != 'nan' else '',
-                    'category': category if category and category != 'nan' else 'Uncategorized'
+                    'category': category
                 })
             except (ValueError, TypeError) as e:
                 continue

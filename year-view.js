@@ -86,53 +86,8 @@ function createMonthlyChart(year) {
         .slice(0, 12) // Top 12 categories to avoid too many colors
         .map(e => e[0]);
     
-    // Create a mapping function to match transaction categories to P&L categories
-    function mapToPnlCategory(transactionCategory) {
-        const transCatLower = (transactionCategory || '').toLowerCase();
-        
-        // Try to find a matching P&L category
-        for (const pnlCat of topCategories) {
-            const pnlCatLower = pnlCat.toLowerCase();
-            // Check if transaction category contains P&L category or vice versa
-            if (transCatLower.includes(pnlCatLower) || pnlCatLower.includes(transCatLower)) {
-                return pnlCat;
-            }
-        }
-        
-        // Try fuzzy matching with common keywords
-        const keywordMap = {
-            'guard': 'Guard Service',
-            'insurance': 'Insurance',
-            'legal': 'Legal Fees',
-            'lifeguard': 'Lifeguards',
-            'management': 'Management Expenses',
-            'office': 'Office Supplies',
-            'police': 'Police Detail',
-            'social': 'Social Functions',
-            'website': 'Website',
-            'accounting': 'Accounting & Software',
-            'bank': 'Bank Service Charges',
-            'janitorial': 'Janitorial Expenses',
-            'pool': 'Swimming Pool',
-            'landscap': 'Grass Cutting & Landscaping',
-            'tree': 'Tree Removal',
-            'gate': 'Gate Maintenance & Repair',
-            'electric': 'Electric',
-            'water': 'Water',
-            'telephone': 'Telephone',
-            'gas': 'Gas'
-        };
-        
-        for (const [keyword, category] of Object.entries(keywordMap)) {
-            if (transCatLower.includes(keyword) && topCategories.includes(category)) {
-                return category;
-            }
-        }
-        
-        return null; // Will be categorized as "Other"
-    }
-    
     // Aggregate transactions by month and category
+    // Transactions now have the correct P&L category from the parser
     const monthlyByCategory = {};
     topCategories.forEach(cat => {
         monthlyByCategory[cat] = new Array(12).fill(0);
@@ -148,17 +103,11 @@ function createMonthlyChart(year) {
     financialData.transactions
         .filter(t => t.year === year && t.amount > 0)
         .forEach(t => {
-            // Try to match using category, vendor, or memo
-            let matchedCategory = mapToPnlCategory(t.category);
-            if (!matchedCategory && t.vendor) {
-                matchedCategory = mapToPnlCategory(t.vendor);
-            }
-            if (!matchedCategory && t.memo) {
-                matchedCategory = mapToPnlCategory(t.memo);
-            }
+            // Use the category directly from the transaction (already parsed correctly from Column C)
+            const category = t.category;
             
-            const category = matchedCategory || 'Other';
-            if (monthlyByCategory[category]) {
+            // Check if this category is in our top categories
+            if (topCategories.includes(category)) {
                 monthlyByCategory[category][t.month - 1] += t.amount;
             } else {
                 monthlyByCategory['Other'][t.month - 1] += t.amount;
@@ -452,51 +401,8 @@ function createExpensesTable(year) {
     
     const totalExpenses = Object.values(expenses).reduce((a, b) => a + b, 0);
     
-    // Map transactions to categories
-    function mapToPnlCategory(text) {
-        const textLower = (text || '').toLowerCase();
-        const allCategories = Object.keys(expenses);
-        
-        for (const pnlCat of allCategories) {
-            const pnlCatLower = pnlCat.toLowerCase();
-            if (textLower.includes(pnlCatLower) || pnlCatLower.includes(textLower)) {
-                return pnlCat;
-            }
-        }
-        
-        const keywordMap = {
-            'guard': 'Guard Service',
-            'insurance': 'Insurance',
-            'legal': 'Legal Fees',
-            'lifeguard': 'Lifeguards',
-            'management': 'Management Expenses',
-            'office': 'Office Supplies',
-            'police': 'Police Detail',
-            'social': 'Social Functions',
-            'website': 'Website',
-            'accounting': 'Accounting & Software',
-            'bank': 'Bank Service Charges',
-            'janitorial': 'Janitorial Expenses',
-            'pool': 'Swimming Pool',
-            'landscap': 'Grass Cutting & Landscaping',
-            'tree': 'Tree Removal',
-            'gate': 'Gate Maintenance & Repair',
-            'electric': 'Electric',
-            'water': 'Water',
-            'telephone': 'Telephone',
-            'gas': 'Gas'
-        };
-        
-        for (const [keyword, category] of Object.entries(keywordMap)) {
-            if (textLower.includes(keyword) && allCategories.includes(category)) {
-                return category;
-            }
-        }
-        
-        return null;
-    }
-    
-    // Group transactions by category
+    // Group transactions by category - use the category directly from transactions
+    // The parser now correctly assigns P&L categories from Column C
     const transactionsByCategory = {};
     Object.keys(expenses).forEach(cat => {
         transactionsByCategory[cat] = [];
@@ -505,12 +411,23 @@ function createExpensesTable(year) {
     financialData.transactions
         .filter(t => t.year === year && t.amount > 0)
         .forEach(t => {
-            let matchedCategory = mapToPnlCategory(t.category);
-            if (!matchedCategory && t.vendor) matchedCategory = mapToPnlCategory(t.vendor);
-            if (!matchedCategory && t.memo) matchedCategory = mapToPnlCategory(t.memo);
+            // Use the category directly from the transaction (already parsed correctly)
+            const category = t.category;
             
-            if (matchedCategory && transactionsByCategory[matchedCategory]) {
-                transactionsByCategory[matchedCategory].push({
+            if (transactionsByCategory[category]) {
+                transactionsByCategory[category].push({
+                    date: t.date,
+                    vendor: t.vendor || 'Unknown',
+                    memo: t.memo || '---',
+                    amount: t.amount
+                });
+            } else {
+                // If category doesn't exist in P&L, it might be a new category
+                // Add it to the list
+                if (!transactionsByCategory[category]) {
+                    transactionsByCategory[category] = [];
+                }
+                transactionsByCategory[category].push({
                     date: t.date,
                     vendor: t.vendor || 'Unknown',
                     memo: t.memo || '---',
