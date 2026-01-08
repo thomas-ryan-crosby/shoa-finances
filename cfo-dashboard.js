@@ -694,22 +694,20 @@ function createForecastTable() {
 }
 
 function analyzeReserves() {
-    // Estimate reserve fund based on net income accumulation
-    const years = [2023, 2024, 2025];
-    const netIncome = years.map(year => {
-        const yearData = financialData.pnl_data[year.toString()];
-        const income = Object.values(yearData?.income || {}).reduce((a, b) => a + b, 0);
-        const expenses = Object.values(yearData?.expenses || {}).reduce((a, b) => a + b, 0);
-        return income - expenses;
-    });
+    // Use actual reserve fund: End of 2024 = $326,672.14, add 2025 net income
+    const end2024Reserve = 326672.14;
+    const y2025Data = financialData.pnl_data['2025'];
+    const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
+    const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
+    const y2025Net = y2025Income - y2025Expenses;
+    const end2025Reserve = end2024Reserve + y2025Net;
     
-    const cumulativeReserve = netIncome.reduce((sum, net) => sum + net, 0);
-    const avgAnnualExpenses = years.reduce((sum, year) => {
+    const avgAnnualExpenses = [2023, 2024, 2025].reduce((sum, year) => {
         const expenses = Object.values(financialData.pnl_data[year.toString()]?.expenses || {}).reduce((a, b) => a + b, 0);
         return sum + expenses;
     }, 0) / 3;
     
-    const monthsOfReserves = (cumulativeReserve / avgAnnualExpenses) * 12;
+    const monthsOfReserves = (end2025Reserve / avgAnnualExpenses) * 12;
     
     let healthStatus = 'Healthy';
     let healthColor = '#28a745';
@@ -724,9 +722,19 @@ function analyzeReserves() {
     document.getElementById('reserveAnalysis').innerHTML = `
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>Estimated Reserve Fund</h3>
-                <div class="value">$${formatCurrency(cumulativeReserve)}</div>
-                <div class="change">Based on 3-year net income</div>
+                <h3>End of 2024 Reserve Fund</h3>
+                <div class="value">$${formatCurrency(end2024Reserve)}</div>
+                <div class="change">Starting Balance</div>
+            </div>
+            <div class="stat-card">
+                <h3>2025 Net Income</h3>
+                <div class="value" style="color: ${y2025Net >= 0 ? '#28a745' : '#dc3545'}">$${formatCurrency(y2025Net)}</div>
+                <div class="change">Added to Reserve</div>
+            </div>
+            <div class="stat-card">
+                <h3>End of 2025 Reserve Fund</h3>
+                <div class="value">$${formatCurrency(end2025Reserve)}</div>
+                <div class="change">Current Balance</div>
             </div>
             <div class="stat-card">
                 <h3>Months of Operating Expenses</h3>
@@ -741,7 +749,8 @@ function analyzeReserves() {
         </div>
         <div class="insight-box" style="margin-top: 20px;">
             <h4>Reserve Fund Analysis</h4>
-            <p>Based on 3-year net income accumulation, estimated reserves are ${monthsOfReserves.toFixed(1)} months of operating expenses. 
+            <p>Based on the actual reserve fund balance of $${formatCurrency(end2024Reserve)} at the end of 2024, plus 2025 net income of $${formatCurrency(y2025Net)}, 
+            the reserve fund at the end of 2025 is $${formatCurrency(end2025Reserve)}. This represents ${monthsOfReserves.toFixed(1)} months of operating expenses. 
             Industry best practice recommends maintaining 6-12 months of operating expenses in reserves for capital projects and emergencies.</p>
         </div>
     `;
