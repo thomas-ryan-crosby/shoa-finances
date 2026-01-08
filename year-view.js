@@ -75,13 +75,139 @@ function createMonthlyChart(year) {
     const ctx = document.getElementById('monthlyChart').getContext('2d');
     
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthlyData = new Array(12).fill(0);
+    
+    // Get P&L expense categories for this year
+    const pnlExpenses = financialData.pnl_data[year.toString()]?.expenses || {};
+    const expenseCategories = Object.keys(pnlExpenses);
+    
+    // Get top categories by total amount
+    const topCategories = Object.entries(pnlExpenses)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 12) // Top 12 categories to avoid too many colors
+        .map(e => e[0]);
+    
+    // Create a mapping function to match transaction categories to P&L categories
+    function mapToPnlCategory(transactionCategory) {
+        const transCatLower = (transactionCategory || '').toLowerCase();
+        
+        // Try to find a matching P&L category
+        for (const pnlCat of topCategories) {
+            const pnlCatLower = pnlCat.toLowerCase();
+            // Check if transaction category contains P&L category or vice versa
+            if (transCatLower.includes(pnlCatLower) || pnlCatLower.includes(transCatLower)) {
+                return pnlCat;
+            }
+        }
+        
+        // Try fuzzy matching with common keywords
+        const keywordMap = {
+            'guard': 'Guard Service',
+            'insurance': 'Insurance',
+            'legal': 'Legal Fees',
+            'lifeguard': 'Lifeguards',
+            'management': 'Management Expenses',
+            'office': 'Office Supplies',
+            'police': 'Police Detail',
+            'social': 'Social Functions',
+            'website': 'Website',
+            'accounting': 'Accounting & Software',
+            'bank': 'Bank Service Charges',
+            'janitorial': 'Janitorial Expenses',
+            'pool': 'Swimming Pool',
+            'landscap': 'Grass Cutting & Landscaping',
+            'tree': 'Tree Removal',
+            'gate': 'Gate Maintenance & Repair',
+            'electric': 'Electric',
+            'water': 'Water',
+            'telephone': 'Telephone',
+            'gas': 'Gas'
+        };
+        
+        for (const [keyword, category] of Object.entries(keywordMap)) {
+            if (transCatLower.includes(keyword) && topCategories.includes(category)) {
+                return category;
+            }
+        }
+        
+        return null; // Will be categorized as "Other"
+    }
+    
+    // Aggregate transactions by month and category
+    const monthlyByCategory = {};
+    topCategories.forEach(cat => {
+        monthlyByCategory[cat] = new Array(12).fill(0);
+    });
+    monthlyByCategory['Other'] = new Array(12).fill(0);
     
     financialData.transactions
         .filter(t => t.year === year && t.amount > 0)
         .forEach(t => {
-            monthlyData[t.month - 1] += t.amount;
+            // Try to match using category, vendor, or memo
+            let matchedCategory = mapToPnlCategory(t.category);
+            if (!matchedCategory && t.vendor) {
+                matchedCategory = mapToPnlCategory(t.vendor);
+            }
+            if (!matchedCategory && t.memo) {
+                matchedCategory = mapToPnlCategory(t.memo);
+            }
+            
+            const category = matchedCategory || 'Other';
+            if (monthlyByCategory[category]) {
+                monthlyByCategory[category][t.month - 1] += t.amount;
+            } else {
+                monthlyByCategory['Other'][t.month - 1] += t.amount;
+            }
         });
+    
+    // Generate color palette
+    const colorPalette = [
+        'rgba(102, 126, 234, 0.8)',   // Blue
+        'rgba(118, 75, 162, 0.8)',    // Purple
+        'rgba(255, 159, 64, 0.8)',    // Orange
+        'rgba(75, 192, 192, 0.8)',    // Teal
+        'rgba(153, 102, 255, 0.8)',   // Light Purple
+        'rgba(255, 99, 132, 0.8)',    // Pink
+        'rgba(54, 162, 235, 0.8)',    // Light Blue
+        'rgba(255, 206, 86, 0.8)',    // Yellow
+        'rgba(201, 203, 207, 0.8)',   // Gray
+        'rgba(255, 159, 64, 0.8)',    // Orange
+        'rgba(75, 192, 192, 0.8)',    // Teal
+        'rgba(153, 102, 255, 0.8)',   // Light Purple
+        'rgba(128, 128, 128, 0.8)'    // Gray for Other
+    ];
+    
+    // Create datasets for each category
+    const datasets = [];
+    let colorIndex = 0;
+    
+    // Add top categories first
+    topCategories.forEach(category => {
+        if (monthlyByCategory[category]) {
+            const total = monthlyByCategory[category].reduce((a, b) => a + b, 0);
+            if (total > 0) { // Only add if there's data
+                datasets.push({
+                    label: category.substring(0, 30),
+                    data: monthlyByCategory[category],
+                    backgroundColor: colorPalette[colorIndex % colorPalette.length],
+                    borderColor: colorPalette[colorIndex % colorPalette.length].replace('0.8', '1'),
+                    borderWidth: 1
+                });
+                colorIndex++;
+            }
+        }
+    });
+    
+    // Add "Other" category if it has data
+    const otherTotal = monthlyByCategory['Other']?.reduce((a, b) => a + b, 0) || 0;
+    if (otherTotal > 0) {
+        datasets.push({
+            label: 'Other',
+            data: monthlyByCategory['Other'],
+            backgroundColor: 'rgba(128, 128, 128, 0.8)',
+            borderColor: 'rgba(128, 128, 128, 1)',
+            borderWidth: 1
+        });
+    }
     
     if (charts.monthly) {
         charts.monthly.destroy();
@@ -91,31 +217,48 @@ function createMonthlyChart(year) {
         type: 'bar',
         data: {
             labels: months,
-            datasets: [{
-                label: `${year} Monthly Spending`,
-                data: monthlyData,
-                backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                borderColor: 'rgba(102, 126, 234, 1)',
-                borderWidth: 2
-            }]
+            datasets: datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'right',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 8,
+                        font: {
+                            size: 11
+                        }
+                    }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return '$' + formatCurrency(context.parsed.y);
+                            const label = context.dataset.label || '';
+                            const value = context.parsed.y;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            return label + ': $' + formatCurrency(value);
+                        },
+                        footer: function(tooltipItems) {
+                            let total = 0;
+                            tooltipItems.forEach(item => {
+                                total += item.parsed.y;
+                            });
+                            return 'Total: $' + formatCurrency(total);
                         }
                     }
                 }
             },
             scales: {
+                x: {
+                    stacked: true
+                },
                 y: {
+                    stacked: true,
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {

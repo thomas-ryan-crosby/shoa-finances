@@ -20,8 +20,6 @@ function initializeApp() {
     
     updateYearStats();
     createMonthlyChart();
-    createExpensesChart();
-    createVendorsChart();
     createTrendsChart();
     initializeBudgetPlanning();
 }
@@ -79,30 +77,110 @@ function createMonthlyChart() {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const years = [2023, 2024, 2025];
     
-    const datasets = years.map((year, idx) => {
-        const monthlyData = new Array(12).fill(0);
+    // Get all P&L expense categories across all years
+    const allCategories = new Set();
+    years.forEach(year => {
+        const expenses = financialData.pnl_data[year.toString()]?.expenses || {};
+        Object.keys(expenses).forEach(cat => allCategories.add(cat));
+    });
+    
+    // Get top categories by total across all years
+    const categoryTotals = {};
+    allCategories.forEach(cat => {
+        categoryTotals[cat] = years.reduce((sum, year) => {
+            return sum + (financialData.pnl_data[year.toString()]?.expenses[cat] || 0);
+        }, 0);
+    });
+    
+    const topCategories = Object.entries(categoryTotals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(e => e[0]);
+    
+    // Mapping function (same as year-view.js)
+    function mapToPnlCategory(text) {
+        const textLower = (text || '').toLowerCase();
+        
+        for (const pnlCat of topCategories) {
+            const pnlCatLower = pnlCat.toLowerCase();
+            if (textLower.includes(pnlCatLower) || pnlCatLower.includes(textLower)) {
+                return pnlCat;
+            }
+        }
+        
+        const keywordMap = {
+            'guard': 'Guard Service',
+            'insurance': 'Insurance',
+            'legal': 'Legal Fees',
+            'lifeguard': 'Lifeguards',
+            'management': 'Management Expenses',
+            'office': 'Office Supplies',
+            'police': 'Police Detail',
+            'social': 'Social Functions',
+            'website': 'Website',
+            'accounting': 'Accounting & Software',
+            'bank': 'Bank Service Charges',
+            'janitorial': 'Janitorial Expenses',
+            'pool': 'Swimming Pool',
+            'landscap': 'Grass Cutting & Landscaping',
+            'tree': 'Tree Removal',
+            'gate': 'Gate Maintenance & Repair',
+            'electric': 'Electric',
+            'water': 'Water',
+            'telephone': 'Telephone',
+            'gas': 'Gas'
+        };
+        
+        for (const [keyword, category] of Object.entries(keywordMap)) {
+            if (textLower.includes(keyword) && topCategories.includes(category)) {
+                return category;
+            }
+        }
+        
+        return null;
+    }
+    
+    // Create datasets for each year with category breakdown
+    const datasets = [];
+    const yearColors = [
+        ['rgba(102, 126, 234, 0.8)', 'rgba(102, 126, 234, 0.5)'],
+        ['rgba(118, 75, 162, 0.8)', 'rgba(118, 75, 162, 0.5)'],
+        ['rgba(255, 159, 64, 0.8)', 'rgba(255, 159, 64, 0.5)']
+    ];
+    
+    years.forEach((year, yearIdx) => {
+        // Aggregate by month and category for this year
+        const monthlyByCategory = {};
+        topCategories.forEach(cat => {
+            monthlyByCategory[cat] = new Array(12).fill(0);
+        });
         
         financialData.transactions
-            .filter(t => t.year === parseInt(year) && t.amount > 0)
+            .filter(t => t.year === year && t.amount > 0)
             .forEach(t => {
-                monthlyData[t.month - 1] += t.amount;
+                let matchedCategory = mapToPnlCategory(t.category);
+                if (!matchedCategory && t.vendor) matchedCategory = mapToPnlCategory(t.vendor);
+                if (!matchedCategory && t.memo) matchedCategory = mapToPnlCategory(t.memo);
+                
+                if (matchedCategory && monthlyByCategory[matchedCategory]) {
+                    monthlyByCategory[matchedCategory][t.month - 1] += t.amount;
+                }
             });
         
-        const colors = [
-            'rgba(102, 126, 234, 0.8)',
-            'rgba(118, 75, 162, 0.8)',
-            'rgba(255, 159, 64, 0.8)'
-        ];
-        
-        return {
-            label: year.toString(),
-            data: monthlyData,
-            borderColor: colors[idx],
-            backgroundColor: colors[idx].replace('0.8', '0.2'),
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4
-        };
+        // Create a dataset for each category for this year
+        topCategories.forEach((category, catIdx) => {
+            const total = monthlyByCategory[category].reduce((a, b) => a + b, 0);
+            if (total > 0) {
+                datasets.push({
+                    label: `${year} - ${category.substring(0, 20)}`,
+                    data: monthlyByCategory[category],
+                    backgroundColor: yearColors[yearIdx][0],
+                    borderColor: yearColors[yearIdx][1],
+                    borderWidth: 1,
+                    stack: year.toString()
+                });
+            }
+        });
     });
     
     if (charts.monthly) {
@@ -110,7 +188,7 @@ function createMonthlyChart() {
     }
     
     charts.monthly = new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels: months,
             datasets: datasets
@@ -121,18 +199,36 @@ function createMonthlyChart() {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'top'
+                    position: 'right',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 5,
+                        font: {
+                            size: 10
+                        }
+                    }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
                             return context.dataset.label + ': $' + formatCurrency(context.parsed.y);
+                        },
+                        footer: function(tooltipItems) {
+                            let total = 0;
+                            tooltipItems.forEach(item => {
+                                total += item.parsed.y;
+                            });
+                            return 'Total: $' + formatCurrency(total);
                         }
                     }
                 }
             },
             scales: {
+                x: {
+                    stacked: true
+                },
                 y: {
+                    stacked: true,
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
