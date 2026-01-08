@@ -1,0 +1,86 @@
+{
+  "income": {
+    "Annual Dues Income": 765052.42,
+    "Clubhouse Rental": 10000.00,
+    "Entry Card Fees": 15000.00,
+    "Interest Income": 22951.57,
+    "Late Fees": 0,
+    "Misc. Income": 0
+  },
+  "expenses": {
+    "Operating Expenses": {
+      "Accounting & Software": 4000.00,
+      "Bank Service Charges": 500.00,
+      "Decorations": 12500.00,
+      "Guard Service": 200000.00,
+      "Insurance": 25000.00,
+      "Legal Fees": 2500.00,
+      "Lifeguards": 2000.00,
+      "Office Supplies": 1000.00,
+      "Police Detail": 1500.00,
+      "Management Expenses": 76490.89,
+      "Social Functions": 25000.00
+    },
+    "Amenities Maintenance": {
+      "Crystal Lake": 5000.00,
+      "Nature Trail": 3000.00
+    },
+    "Clubhouse Maintenance": {
+      "Ballfield": 3000.00,
+      "Exercise Equipment": 5500.00,
+      "Furniture (Clubhouse)": 1000.00,
+      "Furniture (Pool)": 2000.00,
+      "Janitorial Expenses": 15000.00,
+      "Parking Area": 2500.00,
+      "Party Cleaning": 8000.00,
+      "Playground Equipment": 2000.00,
+      "Repairs & Maintenance": 15000.00,
+      "Swimming Pool": 20000.00,
+      "Tennis Courts": 5000.00,
+      "Termite Treatment/Pest Control": 1000.00
+    },
+    "Common Area Maintenance": {
+      "Fence Repair": 3000.00,
+      "Fountain Maintenance": 1000.00,
+      "Lighting": 3000.00,
+      "Mailbox Repairs": 500.00,
+      "Sign Repairs": 7000.00,
+      "Wildlife Management": 3000.00
+    },
+    "Grounds & Landscape Maintenance": {
+      "Grass Cutting & Landscaping": 57500.00,
+      "Landscape Upgrades & Flowers": 10000.00,
+      "Powerline Grass Cutting": 8000.00,
+      "Storm Cleanup": 5000.00,
+      "Tree Removal": 10000.00,
+      "Undeveloped Lot Cutting": 15000.00
+    },
+    "Security": {
+      "Cameras": 2500.00,
+      "Entry Cards/Remotes": 7000.00,
+      "Gate Maintenance & Repair": 10000.00,
+      "Guardhouse Maintenance": 5000.00,
+      "Parade Security (Lights)": 1000.00,
+      "Security Software": 10000.00
+    },
+    "Streets & Drainage": {
+      "Brick Headwalls": 5000.00,
+      "Street Maintenance": 5000.00,
+      "Drainage Repairs": 1000.00
+    },
+    "Taxes": {
+      "Property Tax": 100.00
+    },
+    "Utilities": {
+      "Charter Communications": 4500.00,
+      "Electric": 22500.00,
+      "Gas": 2000.00,
+      "Telephone": 3000.00,
+      "Water": 4000.00
+    },
+    "Special Projects": {
+      "Traffic Study": 3000.00,
+      "Traffic Study Implementation": 10000.00
+    }
+  }
+}
