@@ -19,8 +19,16 @@ async function loadData() {
 }
 
 function initializeBudget() {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('content').style.display = 'block';
+    const loadingEl = document.getElementById('loading');
+    const contentEl = document.getElementById('content');
+    
+    if (!loadingEl || !contentEl) {
+        console.error('Required elements not found in DOM');
+        return;
+    }
+    
+    loadingEl.style.display = 'none';
+    contentEl.style.display = 'block';
     
     // Calculate 2025 net income
     const end2024Reserve = 326672.14;
@@ -30,8 +38,11 @@ function initializeBudget() {
     const y2025Net = y2025Income - y2025Expenses;
     const end2025Reserve = end2024Reserve + y2025Net;
     
-    document.getElementById('y2025NetIncome').textContent = '$' + formatCurrency(y2025Net);
-    document.getElementById('y2025ReserveFund').textContent = '$' + formatCurrency(end2025Reserve);
+    // Update reserve fund display (only if element exists)
+    const y2025ReserveEl = document.getElementById('y2025ReserveFund');
+    if (y2025ReserveEl) {
+        y2025ReserveEl.textContent = '$' + formatCurrency(end2025Reserve);
+    }
     
     // Load income items
     loadIncomeItems();
@@ -55,8 +66,17 @@ function initializeBudget() {
 
 function loadIncomeItems() {
     const container = document.getElementById('incomeItems');
-    const items = budgetData.income || {};
+    if (!container) {
+        console.error('incomeItems container not found');
+        return;
+    }
     
+    if (!budgetData || !budgetData.income) {
+        console.error('Budget income data not available');
+        return;
+    }
+    
+    const items = budgetData.income || {};
     container.innerHTML = Object.entries(items).map(([name, amount]) => `
         <div class="budget-line-item">
             <div class="label">${name}</div>
@@ -74,6 +94,16 @@ function loadIncomeItems() {
 
 function loadExpenseItems(category, containerId) {
     const container = document.getElementById(containerId);
+    if (!container) {
+        console.error(`Container ${containerId} not found`);
+        return;
+    }
+    
+    if (!budgetData || !budgetData.expenses || !budgetData.expenses[category]) {
+        container.innerHTML = '<p style="color: #666; font-style: italic;">No items in this category</p>';
+        return;
+    }
+    
     const items = budgetData.expenses[category] || {};
     
     if (Object.keys(items).length === 0) {
@@ -130,6 +160,11 @@ function removeSpecialProject(button) {
 }
 
 function updateBudgetSummary() {
+    if (!budgetData) {
+        console.error('Budget data not loaded');
+        return;
+    }
+    
     // Calculate total income
     let totalIncome = 0;
     Object.keys(budgetData.income || {}).forEach(name => {
@@ -167,45 +202,65 @@ function updateBudgetSummary() {
     const margin = totalIncome > 0 ? (netIncome / totalIncome * 100) : 0;
     
     // Update income summary
-    document.getElementById('incomeSummary').innerHTML = `
-        <div class="summary-row">
-            <span>Total Income</span>
-            <span>$${formatCurrency(totalIncome)}</span>
-        </div>
-    `;
+    const incomeSummaryEl = document.getElementById('incomeSummary');
+    if (incomeSummaryEl) {
+        incomeSummaryEl.innerHTML = `
+            <div class="summary-row">
+                <span>Total Income</span>
+                <span>$${formatCurrency(totalIncome)}</span>
+            </div>
+        `;
+    }
     
     // Update expense summary
-    document.getElementById('expenseSummary').innerHTML = `
-        <div class="summary-row">
-            <span>Total Expenses</span>
-            <span>$${formatCurrency(totalExpenses)}</span>
-        </div>
-    `;
+    const expenseSummaryEl = document.getElementById('expenseSummary');
+    if (expenseSummaryEl) {
+        expenseSummaryEl.innerHTML = `
+            <div class="summary-row">
+                <span>Total Expenses</span>
+                <span>$${formatCurrency(totalExpenses)}</span>
+            </div>
+        `;
+    }
     
     // Update net income summary
-    document.getElementById('netIncomeSummary').innerHTML = `
-        <div class="summary-row">
-            <span>Projected Net Income</span>
-            <span style="color: ${netIncome >= 0 ? '#28a745' : '#dc3545'}; font-size: 1.2em;">$${formatCurrency(netIncome)}</span>
-        </div>
-        <div class="summary-row">
-            <span>Operating Margin</span>
-            <span style="color: ${margin >= 0 ? '#28a745' : '#dc3545'}">${margin.toFixed(2)}%</span>
-        </div>
-    `;
+    const netIncomeSummaryEl = document.getElementById('netIncomeSummary');
+    if (netIncomeSummaryEl) {
+        netIncomeSummaryEl.innerHTML = `
+            <div class="summary-row">
+                <span>Projected Net Income</span>
+                <span style="color: ${netIncome >= 0 ? '#28a745' : '#dc3545'}; font-size: 1.2em;">$${formatCurrency(netIncome)}</span>
+            </div>
+            <div class="summary-row">
+                <span>Operating Margin</span>
+                <span style="color: ${margin >= 0 ? '#28a745' : '#dc3545'}">${margin.toFixed(2)}%</span>
+            </div>
+        `;
+    }
     
     updateRemainingReserve();
 }
 
 function updateRemainingReserve() {
     const end2024Reserve = 326672.14;
-    const y2025Data = financialData.pnl_data['2025'];
-    const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
-    const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
+    const y2025Data = financialData?.pnl_data?.['2025'];
+    if (!y2025Data) {
+        console.error('2025 data not available');
+        return;
+    }
+    
+    const y2025Income = Object.values(y2025Data.income || {}).reduce((a, b) => a + b, 0);
+    const y2025Expenses = Object.values(y2025Data.expenses || {}).reduce((a, b) => a + b, 0);
     const y2025Net = y2025Income - y2025Expenses;
     const end2025Reserve = end2024Reserve + y2025Net;
     
-    const stormFundAmount = parseFloat(document.getElementById('stormFundAmount').value) || 0;
+    const stormFundInput = document.getElementById('stormFundAmount');
+    if (!stormFundInput) {
+        console.error('stormFundAmount input not found');
+        return;
+    }
+    
+    const stormFundAmount = parseFloat(stormFundInput.value) || 0;
     const spendableReserve = end2025Reserve - stormFundAmount;
     
     // Update displays
