@@ -30,19 +30,33 @@ function initializeBudget() {
     const y2025Net = y2025Income - y2025Expenses;
     const end2025Reserve = end2024Reserve + y2025Net;
     
-    // Estimate 2026 net income (from 2026 budget)
-    const y2026Income = Object.values(budget2026Data.income || {}).reduce((a, b) => a + b, 0);
-    let y2026Expenses = 0;
-    Object.values(budget2026Data.expenses || {}).forEach(category => {
-        Object.values(category || {}).forEach(amount => {
-            y2026Expenses += amount;
+    // Try to get 2026 projection from localStorage (set by 2026 budget page)
+    // Otherwise estimate from 2026 budget data
+    let end2026Reserve = null;
+    try {
+        const saved2026Reserve = localStorage.getItem('end2026ReserveFund');
+        if (saved2026Reserve) {
+            end2026Reserve = parseFloat(saved2026Reserve);
+        }
+    } catch (e) {
+        // localStorage not available, fall back to calculation
+    }
+    
+    if (!end2026Reserve) {
+        // Estimate 2026 net income (from 2026 budget)
+        const y2026Income = Object.values(budget2026Data.income || {}).reduce((a, b) => a + b, 0);
+        let y2026Expenses = 0;
+        Object.values(budget2026Data.expenses || {}).forEach(category => {
+            Object.values(category || {}).forEach(amount => {
+                y2026Expenses += amount;
+            });
         });
-    });
-    const y2026Net = y2026Income - y2026Expenses;
-    const end2026Reserve = end2025Reserve + y2026Net;
+        const y2026Net = y2026Income - y2026Expenses;
+        end2026Reserve = end2025Reserve + y2026Net;
+    }
     
     document.getElementById('y2025ReserveFund').textContent = '$' + formatCurrency(end2025Reserve);
-    document.getElementById('y2026NetIncome').textContent = '$' + formatCurrency(y2026Net);
+    document.getElementById('y2026NetIncome').textContent = '$' + formatCurrency(end2026Reserve - end2025Reserve);
     document.getElementById('y2026ReserveFund').textContent = '$' + formatCurrency(end2026Reserve);
     
     // Initialize 2027 budget with 2026 data + 10% dues increase

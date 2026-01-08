@@ -53,6 +53,15 @@ function initializeBudget() {
     // Initial summary update
     updateBudgetSummary();
     updateRemainingReserve();
+    
+    // Update end of year projection
+    const end2024Reserve = 326672.14;
+    const y2025Data = financialData.pnl_data['2025'];
+    const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
+    const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
+    const y2025Net = y2025Income - y2025Expenses;
+    const end2025Reserve = end2024Reserve + y2025Net;
+    updateEndOfYearProjection(end2025Reserve);
 }
 
 function loadIncomeItems() {
@@ -197,6 +206,15 @@ function updateBudgetSummary() {
     `;
     
     updateRemainingReserve();
+    
+    // Update end of year projection
+    const end2024Reserve = 326672.14;
+    const y2025Data = financialData.pnl_data['2025'];
+    const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
+    const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
+    const y2025Net = y2025Income - y2025Expenses;
+    const end2025Reserve = end2024Reserve + y2025Net;
+    updateEndOfYearProjection(end2025Reserve);
 }
 
 function updateRemainingReserve() {
@@ -208,9 +226,72 @@ function updateRemainingReserve() {
     const end2025Reserve = end2024Reserve + y2025Net;
     
     const stormFundAmount = parseFloat(document.getElementById('stormFundAmount').value) || 0;
-    const remainingReserve = end2025Reserve - stormFundAmount;
+    const spendableReserve = end2025Reserve - stormFundAmount;
     
-    document.getElementById('remainingReserve').textContent = '$' + formatCurrency(remainingReserve);
+    // Update displays
+    const y2025ReserveEl = document.getElementById('y2025ReserveFund');
+    const stormFundDisplayEl = document.getElementById('stormFundDisplay');
+    const spendableReserveEl = document.getElementById('spendableReserve');
+    
+    if (y2025ReserveEl) y2025ReserveEl.textContent = '$' + formatCurrency(end2025Reserve);
+    if (stormFundDisplayEl) stormFundDisplayEl.textContent = '$' + formatCurrency(stormFundAmount);
+    if (spendableReserveEl) spendableReserveEl.textContent = '$' + formatCurrency(spendableReserve);
+    
+    // Update end of year projection
+    updateEndOfYearProjection(end2025Reserve);
+}
+
+function updateEndOfYearProjection(startingReserve) {
+    // Calculate projected net income from budget
+    let totalIncome = 0;
+    Object.keys(budgetData.income || {}).forEach(name => {
+        const input = document.getElementById('income_' + name.replace(/[^a-zA-Z0-9]/g, '_'));
+        if (input) {
+            totalIncome += parseFloat(input.value) || 0;
+        }
+    });
+    
+    let totalExpenses = 0;
+    const expenseContainers = ['operatingExpenses', 'amenitiesMaintenance', 'clubhouseMaintenance', 
+                               'commonAreaMaintenance', 'groundsMaintenance', 'security', 
+                               'streetsDrainage', 'taxes', 'utilities'];
+    
+    expenseContainers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.querySelectorAll('input[type="number"]').forEach(input => {
+                totalExpenses += parseFloat(input.value) || 0;
+            });
+        }
+    });
+    
+    // Add special projects
+    const specialProjects = document.querySelectorAll('#specialProjects .budget-line-item');
+    specialProjects.forEach(item => {
+        const amountInput = item.querySelector('input[type="number"]');
+        if (amountInput && amountInput.id.includes('_amount')) {
+            totalExpenses += parseFloat(amountInput.value) || 0;
+        }
+    });
+    
+    const projectedNet = totalIncome - totalExpenses;
+    const end2026Reserve = startingReserve + projectedNet;
+    
+    const startingReserveEl = document.getElementById('startingReserve2026');
+    const projectedNetEl = document.getElementById('projectedNet2026');
+    const end2026ReserveEl = document.getElementById('end2026ReserveFund');
+    
+    if (startingReserveEl) startingReserveEl.textContent = '$' + formatCurrency(startingReserve);
+    if (projectedNetEl) projectedNetEl.textContent = '$' + formatCurrency(projectedNet);
+    if (end2026ReserveEl) {
+        end2026ReserveEl.textContent = '$' + formatCurrency(end2026Reserve);
+        // Save to localStorage for 2027 page to use
+        try {
+            localStorage.setItem('end2026ReserveFund', end2026Reserve.toString());
+        } catch (e) {
+            // localStorage not available, that's okay
+        }
+    }
 }
 
 function formatCurrency(value) {

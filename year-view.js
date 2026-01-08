@@ -21,6 +21,30 @@ function loadYearData(year) {
     createExpensesChart(year);
     createVendorsChart(year);
     createExpensesTable(year);
+    
+    // Update reserve fund for 2025
+    if (year === 2025) {
+        update2025Reserves();
+    }
+}
+
+function update2025Reserves() {
+    const end2024Reserve = 326672.14;
+    const y2025Data = financialData.pnl_data['2025'];
+    const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
+    const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
+    const y2025Net = y2025Income - y2025Expenses;
+    const end2025Reserve = end2024Reserve + y2025Net;
+    
+    const netIncomeEl = document.getElementById('y2025NetIncome');
+    const reserveFundEl = document.getElementById('y2025ReserveFund');
+    
+    if (netIncomeEl) {
+        netIncomeEl.textContent = '$' + formatCurrency(y2025Net);
+    }
+    if (reserveFundEl) {
+        reserveFundEl.textContent = '$' + formatCurrency(end2025Reserve);
+    }
 }
 
 function updateYearStats(year) {
