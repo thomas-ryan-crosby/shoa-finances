@@ -180,6 +180,31 @@ tr:hover {
     background: #f8f9fa;
 }
 
+.category-row {
+    transition: background 0.2s;
+}
+
+.category-row:hover {
+    background: #e9ecef !important;
+}
+
+.transaction-detail {
+    background: #f8f9fa !important;
+}
+
+.transaction-detail table {
+    box-shadow: none;
+    margin: 0;
+}
+
+.transaction-detail td {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.transaction-detail tr:last-child td {
+    border-bottom: none;
+}
+
 .budget-planning {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;

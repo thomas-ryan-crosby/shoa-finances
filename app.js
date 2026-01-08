@@ -148,6 +148,15 @@ function createMonthlyChart() {
         ['rgba(255, 159, 64, 0.8)', 'rgba(255, 159, 64, 0.5)']
     ];
     
+    // Store transaction details for tooltip
+    const monthlyTransactions = {};
+    years.forEach(year => {
+        monthlyTransactions[year] = {};
+        for (let i = 0; i < 12; i++) {
+            monthlyTransactions[year][i] = [];
+        }
+    });
+    
     years.forEach((year, yearIdx) => {
         // Aggregate by month and category for this year
         const monthlyByCategory = {};
@@ -165,6 +174,12 @@ function createMonthlyChart() {
                 if (matchedCategory && monthlyByCategory[matchedCategory]) {
                     monthlyByCategory[matchedCategory][t.month - 1] += t.amount;
                 }
+                
+                // Store transaction for tooltip
+                monthlyTransactions[year][t.month - 1].push({
+                    category: matchedCategory || 'Other',
+                    amount: t.amount
+                });
             });
         
         // Create a dataset for each category for this year
@@ -211,14 +226,42 @@ function createMonthlyChart() {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return context.dataset.label + ': $' + formatCurrency(context.parsed.y);
+                            // Don't show individual labels
+                            return '';
                         },
                         footer: function(tooltipItems) {
-                            let total = 0;
-                            tooltipItems.forEach(item => {
-                                total += item.parsed.y;
+                            if (tooltipItems.length === 0) return '';
+                            
+                            const monthIndex = tooltipItems[0].dataIndex;
+                            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                            
+                            // Aggregate categories across all years for this month
+                            const categoryTotals = {};
+                            years.forEach(year => {
+                                const transactions = monthlyTransactions[year][monthIndex] || [];
+                                transactions.forEach(t => {
+                                    if (!categoryTotals[t.category]) {
+                                        categoryTotals[t.category] = 0;
+                                    }
+                                    categoryTotals[t.category] += t.amount;
+                                });
                             });
-                            return 'Total: $' + formatCurrency(total);
+                            
+                            // Get top 5 categories for this month
+                            const top5 = Object.entries(categoryTotals)
+                                .sort((a, b) => b[1] - a[1])
+                                .slice(0, 5);
+                            
+                            let footer = [`${monthNames[monthIndex]} - Top 5 Categories:`];
+                            
+                            top5.forEach(([category, amount], idx) => {
+                                footer.push(`${idx + 1}. ${category || 'Other'}: $${formatCurrency(amount)}`);
+                            });
+                            
+                            const total = top5.reduce((sum, [, amount]) => sum + amount, 0);
+                            footer.push(`Total: $${formatCurrency(total)}`);
+                            
+                            return footer;
                         }
                     }
                 }
