@@ -55,9 +55,18 @@ function initializeBudget() {
         end2026Reserve = end2025Reserve + y2026Net;
     }
     
-    document.getElementById('y2025ReserveFund').textContent = '$' + formatCurrency(end2025Reserve);
-    document.getElementById('y2026NetIncome').textContent = '$' + formatCurrency(end2026Reserve - end2025Reserve);
-    document.getElementById('y2026ReserveFund').textContent = '$' + formatCurrency(end2026Reserve);
+    // Update initial reserve fund display
+    const y2026ReserveEl = document.getElementById('y2026ReserveFund');
+    if (y2026ReserveEl) {
+        y2026ReserveEl.textContent = '$' + formatCurrency(end2026Reserve);
+    }
+    
+    // Initialize storm fund display
+    const stormFundDisplayEl = document.getElementById('stormFundDisplay');
+    const spendableReserveEl = document.getElementById('spendableReserve');
+    const stormFundAmount = 375000;
+    if (stormFundDisplayEl) stormFundDisplayEl.textContent = '$' + formatCurrency(stormFundAmount);
+    if (spendableReserveEl) spendableReserveEl.textContent = '$' + formatCurrency(end2026Reserve - stormFundAmount);
     
     // Initialize 2027 budget with 2026 data + 10% dues increase
     initialize2027Budget();
@@ -273,6 +282,20 @@ function updateReserveProjection(totalIncome, totalExpenses) {
         end2026Reserve = end2025Reserve + y2026Net;
     }
     
+    // Update reserve fund allocation displays
+    const stormFundInput = document.getElementById('stormFundAmount');
+    const stormFundAmount = parseFloat(stormFundInput?.value) || 375000;
+    const spendableReserve = end2026Reserve - stormFundAmount;
+    
+    const y2026ReserveEl = document.getElementById('y2026ReserveFund');
+    const stormFundDisplayEl = document.getElementById('stormFundDisplay');
+    const spendableReserveEl = document.getElementById('spendableReserve');
+    
+    if (y2026ReserveEl) y2026ReserveEl.textContent = '$' + formatCurrency(end2026Reserve);
+    if (stormFundDisplayEl) stormFundDisplayEl.textContent = '$' + formatCurrency(stormFundAmount);
+    if (spendableReserveEl) spendableReserveEl.textContent = '$' + formatCurrency(spendableReserve);
+    
+    // Update end of year projection
     const projectedNet2027 = totalIncome - totalExpenses;
     const end2027Reserve = end2026Reserve + projectedNet2027;
     

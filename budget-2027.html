@@ -140,21 +140,27 @@
                 Assumes another 10% dues increase in 2027.</p>
             </div>
 
-            <!-- Reserve Fund Information -->
+            <!-- Reserve Fund Allocation -->
             <div class="reserve-info">
-                <h2 style="color: white; margin-bottom: 15px;">🏦 Projected Reserve Fund Status</h2>
-                <div class="stats-grid">
-                    <div>
-                        <div style="font-size: 0.9em; opacity: 0.9;">End of 2025 Reserve Fund</div>
-                        <div style="font-size: 1.8em; font-weight: bold;" id="y2025ReserveFund">$0.00</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 0.9em; opacity: 0.9;">Projected 2026 Net Income</div>
-                        <div style="font-size: 1.8em; font-weight: bold;" id="y2026NetIncome">$0.00</div>
-                    </div>
+                <h2 style="color: white; margin-bottom: 20px;">🏦 Reserve Fund Allocation</h2>
+                <div class="stats-grid" style="margin-bottom: 20px;">
                     <div>
                         <div style="font-size: 0.9em; opacity: 0.9;">Projected End of 2026 Reserve Fund</div>
                         <div style="font-size: 1.8em; font-weight: bold;" id="y2026ReserveFund">$0.00</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9em; opacity: 0.9;">Allocated to Storm Fund</div>
+                        <div style="font-size: 1.8em; font-weight: bold;" id="stormFundDisplay">$375,000.00</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9em; opacity: 0.9;">Available Spendable Reserve</div>
+                        <div style="font-size: 1.8em; font-weight: bold;" id="spendableReserve">$0.00</div>
+                    </div>
+                </div>
+                <div class="storm-fund" style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <label style="font-size: 1.1em; font-weight: bold; color: white;">Adjust Storm Fund Allocation:</label>
+                        <input type="number" id="stormFundAmount" value="375000" step="1000" onchange="updateBudgetSummary()" style="padding: 10px; border: none; border-radius: 5px; font-size: 1.2em; font-weight: bold; width: 200px;">
                     </div>
                 </div>
             </div>
