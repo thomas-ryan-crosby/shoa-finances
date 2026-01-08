@@ -6,11 +6,22 @@ let currentScenario = 'base';
 async function loadData() {
     try {
         const response = await fetch('data.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         financialData = await response.json();
+        console.log('Financial data loaded:', financialData);
+        if (!financialData || !financialData.pnl_data) {
+            throw new Error('Invalid data structure');
+        }
         initializeDashboard();
     } catch (error) {
         console.error('Error loading data:', error);
-        document.getElementById('loading').innerHTML = 'Error loading data. Please ensure data.json exists.';
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+            loadingEl.innerHTML = `Error loading data: ${error.message}. Please ensure data.json exists and is accessible.`;
+            loadingEl.style.color = '#dc3545';
+        }
     }
 }
 
