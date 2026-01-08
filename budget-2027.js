@@ -237,18 +237,6 @@ function updateBudgetSummary() {
         </div>
     `;
     
-    // Update operating margin display
-    const marginValueEl = document.getElementById('operatingMarginValue');
-    const marginCardEl = document.getElementById('operatingMarginCard');
-    if (marginValueEl) {
-        marginValueEl.textContent = margin.toFixed(2) + '%';
-        marginValueEl.style.color = margin >= 0 ? '#28a745' : '#dc3545';
-        marginValueEl.style.fontSize = '2.5em';
-    }
-    if (marginCardEl) {
-        marginCardEl.style.borderLeft = `5px solid ${margin >= 0 ? '#28a745' : '#dc3545'}`;
-    }
-    
     // Update reserve fund projection
     updateReserveProjection(totalIncome, totalExpenses);
 }

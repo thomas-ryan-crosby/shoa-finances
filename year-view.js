@@ -21,7 +21,7 @@ function loadYearData(year) {
     createExpensesChart(year);
     createVendorsChart(year);
     createExpensesTable(year);
-    updateOperatingMargin(year);
+    updateBudgetSummary(year);
     
     // Update reserve fund for 2025
     if (year === 2025) {
@@ -29,7 +29,7 @@ function loadYearData(year) {
     }
 }
 
-function updateOperatingMargin(year) {
+function updateBudgetSummary(year) {
     const yearData = financialData.pnl_data[year.toString()];
     if (!yearData) return;
     
@@ -38,17 +38,41 @@ function updateOperatingMargin(year) {
     const netIncome = totalIncome - totalExpenses;
     const operatingMargin = totalIncome > 0 ? (netIncome / totalIncome * 100) : 0;
     
-    const marginValueEl = document.getElementById('operatingMarginValue');
-    const marginCardEl = document.getElementById('operatingMarginCard');
-    
-    if (marginValueEl) {
-        marginValueEl.textContent = operatingMargin.toFixed(2) + '%';
-        marginValueEl.style.color = operatingMargin >= 0 ? '#28a745' : '#dc3545';
-        marginValueEl.style.fontSize = '2.5em';
+    // Update income summary
+    const incomeSummaryEl = document.getElementById('incomeSummary');
+    if (incomeSummaryEl) {
+        incomeSummaryEl.innerHTML = `
+            <div class="summary-row">
+                <span>Total Income</span>
+                <span>$${formatCurrency(totalIncome)}</span>
+            </div>
+        `;
     }
     
-    if (marginCardEl) {
-        marginCardEl.style.borderLeft = `5px solid ${operatingMargin >= 0 ? '#28a745' : '#dc3545'}`;
+    // Update expense summary
+    const expenseSummaryEl = document.getElementById('expenseSummary');
+    if (expenseSummaryEl) {
+        expenseSummaryEl.innerHTML = `
+            <div class="summary-row">
+                <span>Total Expenses</span>
+                <span>$${formatCurrency(totalExpenses)}</span>
+            </div>
+        `;
+    }
+    
+    // Update net income summary
+    const netIncomeSummaryEl = document.getElementById('netIncomeSummary');
+    if (netIncomeSummaryEl) {
+        netIncomeSummaryEl.innerHTML = `
+            <div class="summary-row">
+                <span>Net Income</span>
+                <span style="color: ${netIncome >= 0 ? '#28a745' : '#dc3545'}; font-size: 1.2em;">$${formatCurrency(netIncome)}</span>
+            </div>
+            <div class="summary-row">
+                <span>Operating Margin</span>
+                <span style="color: ${operatingMargin >= 0 ? '#28a745' : '#dc3545'}">${operatingMargin.toFixed(2)}%</span>
+            </div>
+        `;
     }
 }
 

@@ -23,13 +23,11 @@ function initializeBudget() {
     document.getElementById('content').style.display = 'block';
     
     // Calculate 2025 net income
+    const end2024Reserve = 326672.14;
     const y2025Data = financialData.pnl_data['2025'];
     const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
     const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
     const y2025Net = y2025Income - y2025Expenses;
-    
-    // Update reserve fund display
-    const end2024Reserve = 326672.14;
     const end2025Reserve = end2024Reserve + y2025Net;
     
     document.getElementById('y2025NetIncome').textContent = '$' + formatCurrency(y2025Net);
@@ -53,15 +51,6 @@ function initializeBudget() {
     // Initial summary update
     updateBudgetSummary();
     updateRemainingReserve();
-    
-    // Update end of year projection
-    const end2024Reserve = 326672.14;
-    const y2025Data = financialData.pnl_data['2025'];
-    const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
-    const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
-    const y2025Net = y2025Income - y2025Expenses;
-    const end2025Reserve = end2024Reserve + y2025Net;
-    updateEndOfYearProjection(end2025Reserve);
 }
 
 function loadIncomeItems() {
@@ -205,28 +194,7 @@ function updateBudgetSummary() {
         </div>
     `;
     
-    // Update operating margin display
-    const marginValueEl = document.getElementById('operatingMarginValue');
-    const marginCardEl = document.getElementById('operatingMarginCard');
-    if (marginValueEl) {
-        marginValueEl.textContent = margin.toFixed(2) + '%';
-        marginValueEl.style.color = margin >= 0 ? '#28a745' : '#dc3545';
-        marginValueEl.style.fontSize = '2.5em';
-    }
-    if (marginCardEl) {
-        marginCardEl.style.borderLeft = `5px solid ${margin >= 0 ? '#28a745' : '#dc3545'}`;
-    }
-    
     updateRemainingReserve();
-    
-    // Update end of year projection
-    const end2024Reserve = 326672.14;
-    const y2025Data = financialData.pnl_data['2025'];
-    const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
-    const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
-    const y2025Net = y2025Income - y2025Expenses;
-    const end2025Reserve = end2024Reserve + y2025Net;
-    updateEndOfYearProjection(end2025Reserve);
 }
 
 function updateRemainingReserve() {
