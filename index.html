@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HOA Financial Review Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
     <style>
         * {
             margin: 0;
@@ -225,53 +226,36 @@
         <h1>🏠 HOA Financial Review Dashboard</h1>
         <p class="subtitle">Sanctuary Home Owners Association - Comprehensive Financial Analysis</p>
 
+        <!-- Navigation -->
+        <div class="section" style="text-align: center; padding: 20px;">
+            <h2 style="margin-bottom: 30px;">Select a Year to View Detailed Analysis</h2>
+            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                <a href="2023.html" class="year-btn" style="text-decoration: none; display: inline-block; padding: 20px 40px; font-size: 1.2em;">
+                    📅 2023 Analysis
+                </a>
+                <a href="2024.html" class="year-btn" style="text-decoration: none; display: inline-block; padding: 20px 40px; font-size: 1.2em;">
+                    📅 2024 Analysis
+                </a>
+                <a href="2025.html" class="year-btn" style="text-decoration: none; display: inline-block; padding: 20px 40px; font-size: 1.2em;">
+                    📅 2025 Analysis
+                </a>
+            </div>
+        </div>
+
         <div id="loading" class="loading">Loading financial data...</div>
         <div id="content" style="display: none;">
             <!-- Year Overview -->
             <div class="section">
-                <h2>📊 Year Overview</h2>
-                <div class="year-selector">
-                    <button class="year-btn active" onclick="showYear('all')">All Years</button>
-                    <button class="year-btn" onclick="showYear(2023)">2023</button>
-                    <button class="year-btn" onclick="showYear(2024)">2024</button>
-                    <button class="year-btn" onclick="showYear(2025)">2025</button>
-                </div>
+                <h2>📊 Multi-Year Overview</h2>
                 <div class="stats-grid" id="yearStats"></div>
             </div>
 
             <!-- Monthly Spending by Year -->
             <div class="section">
-                <h2>📅 Monthly Spending by Year</h2>
+                <h2>📅 Monthly Spending Comparison</h2>
                 <div class="chart-container">
                     <canvas id="monthlyChart"></canvas>
                 </div>
-            </div>
-
-            <!-- Biggest Expenses -->
-            <div class="section">
-                <h2>💰 Biggest Expenses by Category</h2>
-                <div class="chart-container small">
-                    <canvas id="expensesChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Most Expensive Vendors -->
-            <div class="section">
-                <h2>🏢 Most Expensive Vendors</h2>
-                <div class="chart-container small">
-                    <canvas id="vendorsChart"></canvas>
-                </div>
-                <table id="vendorsTable">
-                    <thead>
-                        <tr>
-                            <th>Vendor</th>
-                            <th>Total Amount</th>
-                            <th>Transaction Count</th>
-                            <th>Average Transaction</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
             </div>
 
             <!-- Expense Trends -->
