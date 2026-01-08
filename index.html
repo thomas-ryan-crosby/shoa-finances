@@ -224,84 +224,30 @@
 <body>
     <div class="container">
         <h1>🏠 HOA Financial Review Dashboard</h1>
-        <p class="subtitle">Sanctuary Home Owners Association - Comprehensive Financial Analysis</p>
+        <p class="subtitle">Sanctuary Home Owners Association - Financial Analysis & Budget Planning</p>
 
         <!-- Navigation -->
-        <div class="section" style="text-align: center; padding: 20px;">
-            <h2 style="margin-bottom: 30px;">Select a Year to View Detailed Analysis</h2>
-            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-                <a href="2023.html" class="year-btn" style="text-decoration: none; display: inline-block; padding: 20px 40px; font-size: 1.2em;">
-                    📅 2023 Analysis
+        <div class="section" style="text-align: center; padding: 40px 20px;">
+            <h2 style="margin-bottom: 40px;">Select a Year to View Analysis</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto;">
+                <a href="2023.html" class="year-btn" style="text-decoration: none; display: block; padding: 30px 20px; font-size: 1.3em; text-align: center;">
+                    📅 2023<br><span style="font-size: 0.8em; opacity: 0.9;">Financial Analysis</span>
                 </a>
-                <a href="2024.html" class="year-btn" style="text-decoration: none; display: inline-block; padding: 20px 40px; font-size: 1.2em;">
-                    📅 2024 Analysis
+                <a href="2024.html" class="year-btn" style="text-decoration: none; display: block; padding: 30px 20px; font-size: 1.3em; text-align: center;">
+                    📅 2024<br><span style="font-size: 0.8em; opacity: 0.9;">Financial Analysis</span>
                 </a>
-                <a href="2025.html" class="year-btn" style="text-decoration: none; display: inline-block; padding: 20px 40px; font-size: 1.2em;">
-                    📅 2025 Analysis
+                <a href="2025.html" class="year-btn" style="text-decoration: none; display: block; padding: 30px 20px; font-size: 1.3em; text-align: center;">
+                    📅 2025<br><span style="font-size: 0.8em; opacity: 0.9;">Financial Analysis</span>
                 </a>
-                <a href="cfo-dashboard.html" class="year-btn" style="text-decoration: none; display: inline-block; padding: 20px 40px; font-size: 1.2em; background: #764ba2;">
-                    📊 CFO Analysis
+                <a href="budget-2026.html" class="year-btn" style="text-decoration: none; display: block; padding: 30px 20px; font-size: 1.3em; text-align: center; background: #28a745;">
+                    💰 2026<br><span style="font-size: 0.8em; opacity: 0.9;">Budget Planning</span>
                 </a>
-                <a href="budget-2026.html" class="year-btn" style="text-decoration: none; display: inline-block; padding: 20px 40px; font-size: 1.2em; background: #28a745;">
-                    💰 2026 Budget
+                <a href="budget-2027.html" class="year-btn" style="text-decoration: none; display: block; padding: 30px 20px; font-size: 1.3em; text-align: center; background: #ffc107; color: #333;">
+                    💰 2027<br><span style="font-size: 0.8em; opacity: 0.9;">Budget Planning</span>
                 </a>
-                <a href="budget-2027.html" class="year-btn" style="text-decoration: none; display: inline-block; padding: 20px 40px; font-size: 1.2em; background: #ffc107; color: #333;">
-                    💰 2027 Budget
-                </a>
-            </div>
-        </div>
-
-        <div id="loading" class="loading">Loading financial data...</div>
-        <div id="content" style="display: none;">
-            <!-- Year Overview -->
-            <div class="section">
-                <h2>📊 Multi-Year Overview</h2>
-                <div class="stats-grid" id="yearStats"></div>
-            </div>
-
-            <!-- Monthly Spending by Year -->
-            <div class="section">
-                <h2>📅 Monthly Spending Comparison</h2>
-                <div class="chart-container">
-                    <canvas id="monthlyChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Expense Trends -->
-            <div class="section">
-                <h2>📈 Expense Trends Across Years</h2>
-                <div class="chart-container">
-                    <canvas id="trendsChart"></canvas>
-                </div>
-            </div>
-
-            <!-- 2026 Budget Planning -->
-            <div class="section budget-planning">
-                <h2>🎯 2026 Budget Planning</h2>
-                <p style="margin-bottom: 20px;">Use historical data to plan your 2026 budget. Common line items are pre-populated based on past expenses.</p>
-                <div id="budgetInputs"></div>
-                <div class="budget-summary">
-                    <h3>Budget Summary</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card" style="background: rgba(255,255,255,0.2);">
-                            <h3 style="color: white;">Total Budget</h3>
-                            <div class="value" style="color: white;" id="totalBudget">$0.00</div>
-                        </div>
-                        <div class="stat-card" style="background: rgba(255,255,255,0.2);">
-                            <h3 style="color: white;">vs 2025 Actual</h3>
-                            <div class="value" style="color: white;" id="budgetVs2025">$0.00</div>
-                        </div>
-                        <div class="stat-card" style="background: rgba(255,255,255,0.2);">
-                            <h3 style="color: white;">3-Year Average</h3>
-                            <div class="value" style="color: white;" id="threeYearAvg">$0.00</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
-
-    <script src="app.js"></script>
 </body>
 </html>
 
