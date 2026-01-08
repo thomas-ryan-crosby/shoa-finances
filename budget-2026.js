@@ -19,18 +19,10 @@ async function loadData() {
 }
 
 function initializeBudget() {
-    const loadingEl = document.getElementById('loading');
-    const contentEl = document.getElementById('content');
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
     
-    if (!loadingEl || !contentEl) {
-        console.error('Required elements not found in DOM');
-        return;
-    }
-    
-    loadingEl.style.display = 'none';
-    contentEl.style.display = 'block';
-    
-    // Calculate 2025 net income
+    // Calculate reserve fund projections
     const end2024Reserve = 326672.14;
     const y2025Data = financialData.pnl_data['2025'];
     const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
@@ -38,11 +30,7 @@ function initializeBudget() {
     const y2025Net = y2025Income - y2025Expenses;
     const end2025Reserve = end2024Reserve + y2025Net;
     
-    // Update reserve fund display (only if element exists)
-    const y2025ReserveEl = document.getElementById('y2025ReserveFund');
-    if (y2025ReserveEl) {
-        y2025ReserveEl.textContent = '$' + formatCurrency(end2025Reserve);
-    }
+    document.getElementById('y2025ReserveFund').textContent = '$' + formatCurrency(end2025Reserve);
     
     // Load income items
     loadIncomeItems();
@@ -61,22 +49,12 @@ function initializeBudget() {
     
     // Initial summary update
     updateBudgetSummary();
-    updateRemainingReserve();
 }
 
 function loadIncomeItems() {
     const container = document.getElementById('incomeItems');
-    if (!container) {
-        console.error('incomeItems container not found');
-        return;
-    }
-    
-    if (!budgetData || !budgetData.income) {
-        console.error('Budget income data not available');
-        return;
-    }
-    
     const items = budgetData.income || {};
+    
     container.innerHTML = Object.entries(items).map(([name, amount]) => `
         <div class="budget-line-item">
             <div class="label">${name}</div>
@@ -94,22 +72,7 @@ function loadIncomeItems() {
 
 function loadExpenseItems(category, containerId) {
     const container = document.getElementById(containerId);
-    if (!container) {
-        console.error(`Container ${containerId} not found`);
-        return;
-    }
-    
-    if (!budgetData || !budgetData.expenses || !budgetData.expenses[category]) {
-        container.innerHTML = '<p style="color: #666; font-style: italic;">No items in this category</p>';
-        return;
-    }
-    
     const items = budgetData.expenses[category] || {};
-    
-    if (Object.keys(items).length === 0) {
-        container.innerHTML = '<p style="color: #666; font-style: italic;">No items in this category</p>';
-        return;
-    }
     
     container.innerHTML = Object.entries(items).map(([name, amount]) => `
         <div class="budget-line-item">
@@ -160,40 +123,26 @@ function removeSpecialProject(button) {
 }
 
 function updateBudgetSummary() {
-    if (!budgetData) {
-        console.error('Budget data not loaded');
-        return;
-    }
-    
     // Calculate total income
     let totalIncome = 0;
-    Object.keys(budgetData.income || {}).forEach(name => {
-        const input = document.getElementById('income_' + name.replace(/[^a-zA-Z0-9]/g, '_'));
-        if (input) {
-            totalIncome += parseFloat(input.value) || 0;
-        }
+    const incomeInputs = document.querySelectorAll('#incomeItems input[type="number"]');
+    incomeInputs.forEach(input => {
+        totalIncome += parseFloat(input.value) || 0;
     });
     
     // Calculate total expenses
     let totalExpenses = 0;
-    const expenseContainers = ['operatingExpenses', 'amenitiesMaintenance', 'clubhouseMaintenance', 
-                               'commonAreaMaintenance', 'groundsMaintenance', 'security', 
-                               'streetsDrainage', 'taxes', 'utilities'];
-    
-    expenseContainers.forEach(containerId => {
-        const container = document.getElementById(containerId);
-        if (container) {
-            container.querySelectorAll('input[type="number"]').forEach(input => {
-                totalExpenses += parseFloat(input.value) || 0;
-            });
-        }
+    document.querySelectorAll('#operatingExpenses, #amenitiesMaintenance, #clubhouseMaintenance, #commonAreaMaintenance, #groundsMaintenance, #security, #streetsDrainage, #taxes, #utilities').forEach(container => {
+        container.querySelectorAll('input[type="number"]').forEach(input => {
+            totalExpenses += parseFloat(input.value) || 0;
+        });
     });
     
     // Add special projects
     const specialProjects = document.querySelectorAll('#specialProjects .budget-line-item');
     specialProjects.forEach(item => {
         const amountInput = item.querySelector('input[type="number"]');
-        if (amountInput && amountInput.id.includes('_amount')) {
+        if (amountInput) {
             totalExpenses += parseFloat(amountInput.value) || 0;
         }
     });
@@ -202,68 +151,50 @@ function updateBudgetSummary() {
     const margin = totalIncome > 0 ? (netIncome / totalIncome * 100) : 0;
     
     // Update income summary
-    const incomeSummaryEl = document.getElementById('incomeSummary');
-    if (incomeSummaryEl) {
-        incomeSummaryEl.innerHTML = `
-            <div class="summary-row">
-                <span>Total Income</span>
-                <span>$${formatCurrency(totalIncome)}</span>
-            </div>
-        `;
-    }
+    document.getElementById('incomeSummary').innerHTML = `
+        <div class="summary-row">
+            <span>Total Income</span>
+            <span>$${formatCurrency(totalIncome)}</span>
+        </div>
+    `;
     
     // Update expense summary
-    const expenseSummaryEl = document.getElementById('expenseSummary');
-    if (expenseSummaryEl) {
-        expenseSummaryEl.innerHTML = `
-            <div class="summary-row">
-                <span>Total Expenses</span>
-                <span>$${formatCurrency(totalExpenses)}</span>
-            </div>
-        `;
-    }
+    document.getElementById('expenseSummary').innerHTML = `
+        <div class="summary-row">
+            <span>Total Expenses</span>
+            <span>$${formatCurrency(totalExpenses)}</span>
+        </div>
+    `;
     
     // Update net income summary
-    const netIncomeSummaryEl = document.getElementById('netIncomeSummary');
-    if (netIncomeSummaryEl) {
-        netIncomeSummaryEl.innerHTML = `
-            <div class="summary-row">
-                <span>Projected Net Income</span>
-                <span style="color: ${netIncome >= 0 ? '#28a745' : '#dc3545'}; font-size: 1.2em;">$${formatCurrency(netIncome)}</span>
-            </div>
-            <div class="summary-row">
-                <span>Operating Margin</span>
-                <span style="color: ${margin >= 0 ? '#28a745' : '#dc3545'}">${margin.toFixed(2)}%</span>
-            </div>
-        `;
-    }
+    document.getElementById('netIncomeSummary').innerHTML = `
+        <div class="summary-row">
+            <span>Projected Net Income</span>
+            <span style="color: ${netIncome >= 0 ? '#28a745' : '#dc3545'}; font-size: 1.2em;">$${formatCurrency(netIncome)}</span>
+        </div>
+        <div class="summary-row">
+            <span>Operating Margin</span>
+            <span style="color: ${margin >= 0 ? '#28a745' : '#dc3545'}">${margin.toFixed(2)}%</span>
+        </div>
+    `;
     
-    updateRemainingReserve();
+    // Update reserve fund allocation and projection
+    updateReserveAllocation(totalIncome, totalExpenses);
 }
 
-function updateRemainingReserve() {
+function updateReserveAllocation(totalIncome, totalExpenses) {
     const end2024Reserve = 326672.14;
-    const y2025Data = financialData?.pnl_data?.['2025'];
-    if (!y2025Data) {
-        console.error('2025 data not available');
-        return;
-    }
-    
-    const y2025Income = Object.values(y2025Data.income || {}).reduce((a, b) => a + b, 0);
-    const y2025Expenses = Object.values(y2025Data.expenses || {}).reduce((a, b) => a + b, 0);
+    const y2025Data = financialData.pnl_data['2025'];
+    const y2025Income = Object.values(y2025Data?.income || {}).reduce((a, b) => a + b, 0);
+    const y2025Expenses = Object.values(y2025Data?.expenses || {}).reduce((a, b) => a + b, 0);
     const y2025Net = y2025Income - y2025Expenses;
     const end2025Reserve = end2024Reserve + y2025Net;
     
     const stormFundInput = document.getElementById('stormFundAmount');
-    if (!stormFundInput) {
-        console.error('stormFundAmount input not found');
-        return;
-    }
-    
-    const stormFundAmount = parseFloat(stormFundInput.value) || 0;
+    const stormFundAmount = parseFloat(stormFundInput?.value) || 375000;
     const spendableReserve = end2025Reserve - stormFundAmount;
     
-    // Update displays
+    // Update reserve fund displays
     const y2025ReserveEl = document.getElementById('y2025ReserveFund');
     const stormFundDisplayEl = document.getElementById('stormFundDisplay');
     const spendableReserveEl = document.getElementById('spendableReserve');
@@ -273,50 +204,14 @@ function updateRemainingReserve() {
     if (spendableReserveEl) spendableReserveEl.textContent = '$' + formatCurrency(spendableReserve);
     
     // Update end of year projection
-    updateEndOfYearProjection(end2025Reserve);
-}
-
-function updateEndOfYearProjection(startingReserve) {
-    // Calculate projected net income from budget
-    let totalIncome = 0;
-    Object.keys(budgetData.income || {}).forEach(name => {
-        const input = document.getElementById('income_' + name.replace(/[^a-zA-Z0-9]/g, '_'));
-        if (input) {
-            totalIncome += parseFloat(input.value) || 0;
-        }
-    });
-    
-    let totalExpenses = 0;
-    const expenseContainers = ['operatingExpenses', 'amenitiesMaintenance', 'clubhouseMaintenance', 
-                               'commonAreaMaintenance', 'groundsMaintenance', 'security', 
-                               'streetsDrainage', 'taxes', 'utilities'];
-    
-    expenseContainers.forEach(containerId => {
-        const container = document.getElementById(containerId);
-        if (container) {
-            container.querySelectorAll('input[type="number"]').forEach(input => {
-                totalExpenses += parseFloat(input.value) || 0;
-            });
-        }
-    });
-    
-    // Add special projects
-    const specialProjects = document.querySelectorAll('#specialProjects .budget-line-item');
-    specialProjects.forEach(item => {
-        const amountInput = item.querySelector('input[type="number"]');
-        if (amountInput && amountInput.id.includes('_amount')) {
-            totalExpenses += parseFloat(amountInput.value) || 0;
-        }
-    });
-    
     const projectedNet = totalIncome - totalExpenses;
-    const end2026Reserve = startingReserve + projectedNet;
+    const end2026Reserve = end2025Reserve + projectedNet;
     
     const startingReserveEl = document.getElementById('startingReserve2026');
     const projectedNetEl = document.getElementById('projectedNet2026');
     const end2026ReserveEl = document.getElementById('end2026ReserveFund');
     
-    if (startingReserveEl) startingReserveEl.textContent = '$' + formatCurrency(startingReserve);
+    if (startingReserveEl) startingReserveEl.textContent = '$' + formatCurrency(end2025Reserve);
     if (projectedNetEl) projectedNetEl.textContent = '$' + formatCurrency(projectedNet);
     if (end2026ReserveEl) {
         end2026ReserveEl.textContent = '$' + formatCurrency(end2026Reserve);
@@ -330,9 +225,6 @@ function updateEndOfYearProjection(startingReserve) {
 }
 
 function formatCurrency(value) {
-    if (value === null || value === undefined || isNaN(value)) {
-        return '0.00';
-    }
     return new Intl.NumberFormat('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -340,9 +232,4 @@ function formatCurrency(value) {
 }
 
 // Initialize on load
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadData);
-} else {
-    loadData();
-}
-
+loadData();
